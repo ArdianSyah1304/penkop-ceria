@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Penkop Ceria - SMPN 6 Kopang</title>
+    <!-- CSS Dependencies -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --bg-color: #f4f7f6;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            transition: background 0.5s;
+        }
+
+        /* Responsive Mobile vs Laptop */
+        @media (max-width: 768px) {
+            :root { --sidebar-width: 70px; }
+            .sidebar span { display: none; }
+            .content { margin-left: 70px !important; }
+            .card-grid { grid-template-columns: 1fr !important; }
+        }
+
+        /* Login Page */
+        #login-page {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            background-size: cover;
+        }
+
+        .login-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            width: 350px;
+            text-align: center;
+        }
+
+        .login-card img { width: 80px; margin-bottom: 1rem; }
+
+        /* Dashboard Layout */
+        .main-container { display: none; }
+        
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--primary);
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            padding-top: 20px;
+            transition: 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .sidebar-item:hover { background: var(--secondary); }
+        .sidebar-item i { margin-right: 15px; width: 20px; }
+
+        .content {
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+            transition: 0.3s;
+        }
+
+        .header-app {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-app img { height: 40px; margin-right: 15px; }
+
+        /* Component Styles */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .form-group { margin-bottom: 15px; text-align: left; }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-delete { background: var(--accent); }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background: #f8f9fa; }
+
+        /* Chart container */
+        .chart-container {
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        .grid-7 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .activity-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: 0.3s;
+        }
+
+        .activity-card:hover { transform: translateY(-5px); border-color: var(--secondary); }
+
+        /* Notification Badge */
+        .badge {
+            background: red;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 50%;
+            font-size: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN PAGE -->
+    <div id="login-page">
+        <div class="login-card animate__animated animate__fadeInDown">
+            <img id="login-logo" src="https://cdn-icons-png.flaticon.com/512/3413/3413380.png" alt="Logo">
+            <h2 id="app-title-login">Penkop Ceria</h2>
+            <p id="app-desc-login">Monitoring Kegiatan Siswa SMPN 6 Kopang</p>
+            <div class="form-group">
+                <input type="text" id="username" placeholder="Username">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" placeholder="Password">
+            </div>
+            <button onclick="login()" style="width:100%">LOGIN</button>
+        </div>
+    </div>
+
+    <!-- MAIN APP STRUCTURE -->
+    <div id="main-app" class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-item" onclick="showSection('dashboard')">
+                <i class="fas fa-home"></i> <span>Dashboard</span>
+            </div>
+            <div id="menu-guru" style="display:none">
+                <div class="sidebar-item" onclick="showSection('identitas-guru')">
+                    <i class="fas fa-users"></i> <span>Identitas Siswa</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('riwayat-guru')">
+                    <i class="fas fa-history"></i> <span>Riwayat Kegiatan</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('notifikasi-guru')">
+                    <i class="fas fa-bell"></i> <span>Kirim Notifikasi</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('pengaturan')">
+                    <i class="fas fa-cog"></i> <span>Pengaturan</span>
+                </div>
+            </div>
+            <div id="menu-siswa" style="display:none">
+                <div class="sidebar-item" onclick="showSection('identitas-siswa')">
+                    <i class="fas fa-user-edit"></i> <span>Isi Identitas</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('kegiatan-siswa')">
+                    <i class="fas fa-tasks"></i> <span>7 Kegiatan</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('notifikasi-siswa')">
+                    <i class="fas fa-envelope"></i> <span>Notifikasi</span>
+                </div>
+            </div>
+            <div id="menu-ortu" style="display:none">
+                <div class="sidebar-item" onclick="showSection('identitas-guru')">
+                    <i class="fas fa-child"></i> <span>Identitas Anak</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('riwayat-guru')">
+                    <i class="fas fa-list"></i> <span>Riwayat Anak</span>
+                </div>
+            </div>
+            <div class="sidebar-item" onclick="logout()" style="margin-top: 20px; color: #ff7675;">
+                <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="header-app">
+                <img id="nav-logo" src="https://cdn-icons-png.flaticon.com/512/3413/3413380.png">
+                <h3 id="nav-title">Penkop Ceria</h3>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="section-dashboard" class="animate__animated animate__fadeIn">
+                <h2>Statistik Ringkasan</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                    <div class="card" style="flex: 1; min-width: 300px;">
+                        <div class="chart-container">
+                            <canvas id="donutChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card" style="flex: 1; min-width: 300px;">
+                        <h3>Informasi</h3>
+                        <p id="stat-text">Total Siswa Terdata: 0</p>
+                        <p id="stat-kegiatan">Total Kegiatan: 0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Identitas Form (Siswa) -->
+            <div id="section-identitas-siswa" class="animate__animated animate__fadeIn" style="display:none">
+                <div class="card">
+                    <h3>Form Identitas Diri</h3>
+                    <div class="form-group">
+                        <input type="text" id="f-nama" placeholder="Nama Lengkap">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="f-alamat" placeholder="Alamat Lengkap"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="f-ttl" placeholder="Tempat, Tanggal Lahir">
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="f-kls" placeholder="Kelas">
+                    </div>
+                    <button onclick="simpanIdentitas()">SIMPAN DATA</button>
+                </div>
+            </div>
+
+            <!-- Tabel Identitas (Guru) -->
+            <div id="section-identitas-guru" class="animate__animated animate__fadeIn" style="display:none">
+                <div class="card">
+                    <h3>Data Identitas Siswa</h3>
+                    <div style="display:flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="search-identitas" placeholder="Cari nama..." onkeyup="filterTable('table-identitas', this.value)">
+                        <button onclick="exportPDF('table-identitas', 'Data Identitas Siswa')"><i class="fas fa-file-pdf"></i> Cetak</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="table-identitas">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Alamat</th>
+                                    <th>TTL</th>
+                                    <th>Kelas</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="body-identitas"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 7 Kegiatan (Siswa) -->
+            <div id="section-kegiatan-siswa" class="animate__animated animate__fadeIn" style="display:none">
+                <h3>Pilih Kegiatan Hari Ini</h3>
+                <div class="grid-7">
+                    <div class="activity-card animate__animated animate__bounceIn" onclick="openActivity('Bangun Pagi')">
+                        <i class="fas fa-sun fa-2x"></i><br>Bangun Pagi
+                    </div>
+                    <div class="activity-card animate__animated animate__bounceIn" style="animation-delay: 0.1s" onclick="openActivity('Berolahraga')">
+                        <i class="fas fa-running fa-2x"></i><br>Berolahraga
+                    </div>
+                    <div class="activity-card animate__animated animate__bounceIn" style="animation-delay: 0.2s" onclick="openActivity('Makan Sehat')">
+                        <i class="fas fa-apple-alt fa-2x"></i><br>Makan Sehat
+                    </div>
+                    <div class="activity-card animate__animated animate__bounceIn" style="animation-delay: 0.3s" onclick="openActivity('Beribadah')">
+                        <i class="fas fa-pray fa-2x"></i><br>Beribadah
+                    </div>
+                    <div class="activity-card animate__animated animate__bounceIn" style="animation-delay: 0.4s" onclick="openActivity('Bermasyarakat')">
+                        <i class="fas fa-users fa-2x"></i><br>Bermasyarakat
+                    </div>
+                    <div class="activity-card animate__animated animate__bounceIn" style="animation-delay: 0.5s" onclick="openActivity('Belajar')">
+                        <i class="fas fa-book fa-2x"></i><br>Belajar
+                    </div>
+                    <div class="activity-card animate__animated animate__bounceIn" style="animation-delay: 0.6s" onclick="openActivity('Waktu Tidur')">
+                        <i class="fas fa-bed fa-2x"></i><br>Waktu Tidur
+                    </div>
+                </div>
+
+                <!-- Activity Modal Form -->
+                <div id="activity-modal" class="card" style="display:none; margin-top:20px;">
+                    <h3 id="modal-title">Form Kegiatan</h3>
+                    <div id="modal-questions"></div>
+                    <div class="form-group">
+                        <label><input type="checkbox" id="paraf-guru"> Paraf Guru</label>
+                        <label style="margin-left:20px;"><input type="checkbox" id="paraf-ortu"> Paraf Orang Tua</label>
+                    </div>
+                    <button onclick="simpanKegiatan()">KIRIM KEGIATAN</button>
+                    <button class="btn-delete" onclick="this.parentElement.style.display='none'">BATAL</button>
+                </div>
+            </div>
+
+            <!-- Riwayat Guru -->
+            <div id="section-riwayat-guru" class="animate__animated animate__fadeIn" style="display:none">
+                <div class="card">
+                    <h3>Riwayat Kegiatan Siswa</h3>
+                    <div style="display:flex; gap: 10px; margin-bottom: 10px;">
+                        <input type="text" id="search-riwayat" placeholder="Cari kegiatan/siswa..." onkeyup="filterTable('table-riwayat', this.value)">
+                        <button onclick="exportPDF('table-riwayat', 'Riwayat Kegiatan Siswa')"><i class="fas fa-file-pdf"></i> Cetak</button>
+                    </div>
+                    <div style="overflow-x: auto;">
+                        <table id="table-riwayat">
+                            <thead>
+                                <tr>
+                                    <th>Siswa</th>
+                                    <th>Kegiatan</th>
+                                    <th>Detail Jawaban</th>
+                                    <th>Tanggal</th>
+                                    <th>Paraf G/O</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="body-riwayat"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifikasi Guru -->
+            <div id="section-notifikasi-guru" class="animate__animated animate__fadeIn" style="display:none">
+                <div class="card">
+                    <h3>Kirim Notifikasi Baru</h3>
+                    <div class="form-group">
+                        <input type="text" id="n-judul" placeholder="Judul Notifikasi">
+                    </div>
+                    <div class="form-group">
+                        <textarea id="n-deskripsi" placeholder="Isi Deskripsi"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <input type="date" id="n-tgl">
+                    </div>
+                    <button onclick="kirimNotif()">KIRIM KE SISWA</button>
+                </div>
+                <div class="card">
+                    <h3>Daftar Notifikasi Terkirim</h3>
+                    <div id="list-notif-guru"></div>
+                </div>
+            </div>
+
+            <!-- Notifikasi Siswa -->
+            <div id="section-notifikasi-siswa" class="animate__animated animate__fadeIn" style="display:none">
+                <h3>Kotak Masuk Notifikasi</h3>
+                <div id="list-notif-siswa"></div>
+            </div>
+
+            <!-- Pengaturan -->
+            <div id="section-pengaturan" class="animate__animated animate__fadeIn" style="display:none">
+                <div class="card">
+                    <h3><i class="fas fa-tools"></i> Pengaturan Profesional</h3>
+                    <div class="form-group">
+                        <label>Nama Aplikasi</label>
+                        <input type="text" id="set-app-name" value="Penkop Ceria">
+                    </div>
+                    <div class="form-group">
+                        <label>Deskripsi Aplikasi</label>
+                        <input type="text" id="set-app-desc" value="Monitoring Kegiatan Siswa">
+                    </div>
+                    <div class="form-group">
+                        <label>Ubah Logo (File)</label>
+                        <input type="file" id="set-logo" accept="image/*" onchange="previewImage(this, 'nav-logo')">
+                    </div>
+                    <div class="form-group">
+                        <label>Ubah Background Login (File)</label>
+                        <input type="file" id="set-bg" accept="image/*">
+                    </div>
+                    <hr>
+                    <div style="display:flex; gap: 10px;">
+                        <button onclick="saveSettings()">SIMPAN PERUBAHAN</button>
+                        <button style="background: #27ae60;" onclick="backupData()">BACKUP KE MYSQL (SQL)</button>
+                        <button class="btn-delete" onclick="resetData()">RESET DATA PERMANEN</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JS LOGIC -->
+    <script>
+        // INTEGRASI SCRIPT URL
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwiFbAePoGAenNBh0jP65-6Rg2DdXKtTygmPRSvgGPcHlkQhnmWhDLG7C9O1lNjH8wQow/exec";
+
+// Modifikasi fungsi loadData
+async function loadData() {
+    try {
+        const response = await fetch(SCRIPT_URL);
+        const data = await response.json();
+        db.identitas = data.identitas || [];
+        db.kegiatan = data.kegiatan || [];
+        db.notifikasi = data.notifikasi || [];
+        
+        updateDashboardStats();
+        renderTables();
+    } catch (err) {
+        console.log("Gagal mengambil data dari Google Sheets");
+    }
+}
+
+        let myChart = null;
+
+        // LOAD DATA
+        function loadData() {
+            // Jika pakai Apps Script, tambahkan fetch(SCRIPT_URL) di sini
+            console.log("Data loaded from local storage");
+            updateDashboardStats();
+            renderTables();
+            applySettings();
+        }
+
+        // LOGIN SYSTEM
+        function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if(user === 'guru' && pass === '12345') {
+                currentUser = { role: 'guru', name: 'Bpk. Guru' };
+            } else if(user === 'siswa' && pass === '1234') {
+                currentUser = { role: 'siswa', name: 'Siswa User' };
+            } else if(user === 'orang tua' && pass === '54321') {
+                currentUser = { role: 'ortu', name: 'Wali Murid' };
+            } else {
+                alert("Login Gagal!");
+                return;
+            }
+
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+            
+            // Show menu based on role
+            document.getElementById('menu-guru').style.display = (currentUser.role === 'guru') ? 'block' : 'none';
+            document.getElementById('menu-siswa').style.display = (currentUser.role === 'siswa') ? 'block' : 'none';
+            document.getElementById('menu-ortu').style.display = (currentUser.role === 'ortu') ? 'block' : 'none';
+
+            loadData();
+            showSection('dashboard');
+        }
+
+        function logout() {
+            location.reload();
+        }
+
+        // NAVIGATION
+        function showSection(id) {
+            const sections = ['dashboard', 'identitas-siswa', 'identitas-guru', 'kegiatan-siswa', 'riwayat-guru', 'notifikasi-guru', 'notifikasi-siswa', 'pengaturan'];
+            sections.forEach(s => {
+                const el = document.getElementById('section-' + s);
+                if(el) el.style.display = 'none';
+            });
+            document.getElementById('section-' + id).style.display = 'block';
+        }
+
+        // SETTINGS & LOGO
+        function applySettings() {
+            document.getElementById('nav-title').innerText = db.settings.name;
+            document.getElementById('app-title-login').innerText = db.settings.name;
+            document.getElementById('app-desc-login').innerText = db.settings.desc;
+            document.getElementById('nav-logo').src = db.settings.logo;
+            document.getElementById('login-logo').src = db.settings.logo;
+            if(db.settings.bg) {
+                document.getElementById('login-page').style.backgroundImage = `url(${db.settings.bg})`;
+            }
+        }
+
+        function saveSettings() {
+            db.settings.name = document.getElementById('set-app-name').value;
+            db.settings.desc = document.getElementById('set-app-desc').value;
+            
+            const bgFile = document.getElementById('set-bg').files[0];
+            if(bgFile) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    db.settings.bg = e.target.result;
+                    saveDB();
+                    applySettings();
+                };
+                reader.readAsDataURL(bgFile);
+            } else {
+                saveDB();
+                applySettings();
+            }
+            alert("Pengaturan Berhasil Disimpan!");
+        }
+
+        function previewImage(input, targetId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    db.settings.logo = e.target.result;
+                    document.getElementById(targetId).src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // IDENTITAS LOGIC
+       // IDENTITAS LOGIC
+async function simpanIdentitas() {
+    const dataBaru = {
+        id: Date.now(),
+        user: currentUser.name,
+        nama: document.getElementById('f-nama').value,
+        alamat: document.getElementById('f-alamat').value,
+        ttl: document.getElementById('f-ttl').value,
+        kls: document.getElementById('f-kls').value
+    };
+
+    try {
+        // Tampilkan loading sederhana
+        const btn = event.target;
+        btn.innerText = "MENGIRIM...";
+        btn.disabled = true;
+
+        // Kirim ke Google Sheets
+        await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ target: 'identitas', data: dataBaru })
+        });
+
+        alert("Identitas Berhasil Disimpan ke Cloud!");
+        
+        // Bersihkan form
+        document.getElementById('f-nama').value = "";
+        document.getElementById('f-alamat').value = "";
+        
+        btn.innerText = "SIMPAN DATA";
+        btn.disabled = false;
+        
+        loadData(); // Memperbarui tabel secara otomatis
+    } catch (error) {
+        alert("Gagal menyimpan: " + error);
+    }
+}
+
+        // KEGIATAN LOGIC (7 KEGIATAN)
+        let currentActivityType = "";
+        function openActivity(type) {
+            currentActivityType = type;
+            document.getElementById('activity-modal').style.display = 'block';
+            document.getElementById('modal-title').innerText = "Form: " + type;
+            
+            const questions = {
+                'Bangun Pagi': ['Jam berapa bangun?', 'Apakah merapikan tempat tidur?', 'Apakah minum air putih?', 'Apakah berdoa?', 'Apakah membuka jendela?'],
+                'Berolahraga': ['Jenis olahraga?', 'Durasi (menit)?', 'Lokasi?', 'Keringat yang keluar (Banyak/Sedikit)?', 'Kondisi tubuh?'],
+                'Makan Sehat': ['Menu sarapan?', 'Ada sayuran?', 'Ada buah?', 'Minum susu?', 'Habis makanannya?'],
+                'Beribadah': ['Sholat/Ibadah apa?', 'Di masjid/tempat ibadah?', 'Tepat waktu?', 'Bersama keluarga?', 'Berdoa khusus?'],
+                'Bermasyarakat': ['Membantu siapa?', 'Jenis bantuan?', 'Ada teman lain?', 'Durasi?', 'Perasaan setelah membantu?'],
+                'Belajar': ['Mata pelajaran?', 'Topik bahasan?', 'Durasi belajar?', 'Ada kesulitan?', 'Selesai tugas?'],
+                'Waktu Tidur': ['Jam berapa tidur?', 'Sudah cuci kaki/tangan?', 'Ganti baju tidur?', 'Berdoa sebelum tidur?', 'Lampu dimatikan?']
+            };
+
+            let html = "";
+            questions[type].forEach((q, i) => {
+                html += `<div class="form-group"><label>${q}</label><input type="text" id="q-${i}"></div>`;
+            });
+            document.getElementById('modal-questions').innerHTML = html;
+        }
+
+        async function simpanKegiatan() {
+    let answers = [];
+    for(let i=0; i<5; i++) {
+        answers.push(document.getElementById('q-'+i).value);
+    }
+
+    const dataBaru = {
+        id: Date.now(),
+        siswa: currentUser.name,
+        tipe: currentActivityType,
+        jawaban: answers.join(", "),
+        tgl: new Date().toLocaleDateString(),
+        paraf_g: document.getElementById('paraf-guru').checked ? "✓" : "-",
+        paraf_o: document.getElementById('paraf-ortu').checked ? "✓" : "-"
+    };
+
+    await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ target: 'kegiatan', data: dataBaru })
+    });
+
+    alert("Kegiatan Berhasil Dicatat!");
+    document.getElementById('activity-modal').style.display = 'none';
+    loadData();
+}
+        // NOTIFIKASI LOGIC
+        async function kirimNotif() {
+    const dataBaru = {
+        id: Date.now(),
+        judul: document.getElementById('n-judul').value,
+        desc: document.getElementById('n-deskripsi').value,
+        tgl: document.getElementById('n-tgl').value
+    };
+
+    await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify({ target: 'notifikasi', data: dataBaru })
+    });
+
+    alert("Notifikasi Terkirim!");
+    loadData();
+}
+
+        // CORE FUNCTIONS
+        function saveDB() {
+            localStorage.setItem('penkop_db', JSON.stringify(db));
+        }
+
+        function renderTables() {
+            // Table Identitas
+            const bodyIdentitas = document.getElementById('body-identitas');
+            if(bodyIdentitas) {
+                bodyIdentitas.innerHTML = db.identitas.map(item => `
+                    <tr>
+                        <td>${item.nama}</td>
+                        <td>${item.alamat}</td>
+                        <td>${item.ttl}</td>
+                        <td>${item.kls}</td>
+                        <td><button class="btn-delete" onclick="hapusIdentitas(${item.id})">Hapus</button></td>
+                    </tr>
+                `).join('');
+            }
+
+            // Table Riwayat
+            const bodyRiwayat = document.getElementById('body-riwayat');
+            if(bodyRiwayat) {
+                bodyRiwayat.innerHTML = db.kegiatan.map(item => `
+                    <tr>
+                        <td>${item.siswa}</td>
+                        <td>${item.tipe}</td>
+                        <td>${item.jawaban}</td>
+                        <td>${item.tgl}</td>
+                        <td>${item.paraf_g}/${item.paraf_o}</td>
+                        <td><button class="btn-delete" onclick="hapusKegiatan(${item.id})">Hapus</button></td>
+                    </tr>
+                `).join('');
+            }
+
+            // Notif List (Guru)
+            const listNotifG = document.getElementById('list-notif-guru');
+            if(listNotifG) {
+                listNotifG.innerHTML = db.notifikasi.map(n => `
+                    <div class="card" style="border-left: 5px solid var(--secondary)">
+                        <strong>${n.judul}</strong> (${n.tgl})<br>${n.desc}
+                        <br><button class="btn-delete" style="margin-top:5px" onclick="hapusNotif(${n.id})">Hapus Permanen</button>
+                    </div>
+                `).join('');
+            }
+
+            // Notif List (Siswa)
+            const listNotifS = document.getElementById('list-notif-siswa');
+            if(listNotifS) {
+                listNotifS.innerHTML = db.notifikasi.map(n => `
+                    <div class="card animate__animated animate__fadeInRight">
+                        <small>${n.tgl}</small>
+                        <h4>${n.judul}</h4>
+                        <p>${n.desc}</p>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function hapusIdentitas(id) {
+            db.identitas = db.identitas.filter(i => i.id !== id);
+            saveDB();
+            renderTables();
+            updateDashboardStats();
+        }
+
+        function hapusKegiatan(id) {
+            db.kegiatan = db.kegiatan.filter(k => k.id !== id);
+            saveDB();
+            renderTables();
+            updateDashboardStats();
+        }
+
+        function filterTable(tableId, val) {
+            const rows = document.getElementById(tableId).getElementsByTagName('tr');
+            for (let i = 1; i < rows.length; i++) {
+                rows[i].style.display = rows[i].innerText.toLowerCase().includes(val.toLowerCase()) ? '' : 'none';
+            }
+        }
+
+        // CHART & STATS
+        function updateDashboardStats() {
+            // Logika hitung: Jika nama sudah ada di identitas, hitung 1. 
+            // Jika isi kegiatan yang berbeda, baru terhitung sesuai permintaan.
+            const totalSiswa = db.identitas.length;
+            const totalKegiatan = db.kegiatan.length;
+            
+            document.getElementById('stat-text').innerText = `Total Siswa Terdaftar: ${totalSiswa}`;
+            document.getElementById('stat-kegiatan').innerText = `Total Kegiatan Dilaporkan: ${totalKegiatan}`;
+
+            const ctx = document.getElementById('donutChart').getContext('2d');
+            if(myChart) myChart.destroy();
+            
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Identitas', 'Kegiatan'],
+                    datasets: [{
+                        data: [totalSiswa, totalKegiatan],
+                        backgroundColor: ['#3498db', '#e74c3c']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // PDF EXPORT
+        function exportPDF(tableId, title) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Header KOP SMPN 6 KOPANG
+            doc.setFontSize(18);
+            doc.text("PEMERINTAH KABUPATEN LOMBOK TENGAH", 105, 15, {align: "center"});
+            doc.setFontSize(22);
+            doc.text("SMPN 6 KOPANG", 105, 25, {align: "center"});
+            doc.setFontSize(10);
+            doc.text("Alamat: Jln. Raya Kopang, Kec. Kopang, Kab. Lombok Tengah", 105, 32, {align: "center"});
+            doc.line(10, 35, 200, 35);
+            
+            doc.setFontSize(14);
+            doc.text(title, 15, 45);
+            
+            doc.autoTable({
+                html: '#' + tableId,
+                startY: 50,
+                theme: 'grid'
+            });
+            
+            doc.save(`${title}.pdf`);
+        }
+
+        // UTILITIES
+        function resetData() {
+            if(confirm("Hapus semua data secara permanen?")) {
+                localStorage.removeItem('penkop_db');
+                location.reload();
+            }
+        }
+
+        function backupData() {
+            let sql = "CREATE DATABASE penkop_db;\n";
+            sql += "CREATE TABLE identitas (nama TEXT, alamat TEXT, ttl TEXT, kelas TEXT);\n";
+            db.identitas.forEach(i => {
+                sql += `INSERT INTO identitas VALUES ('${i.nama}', '${i.alamat}', '${i.ttl}', '${i.kls}');\n`;
+            });
+            
+            const blob = new Blob([sql], {type: 'text/sql'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "backup_penkop_ceria.sql";
+            a.click();
+        }
+
+        // Initial Load
+        applySettings();
+    </script>
+</body>
+</html>
